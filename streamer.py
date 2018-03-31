@@ -4,6 +4,17 @@ import re
 import keys
 from pprint import pprint
 
+# access keys for Twitter
+consumer_key = keys.consumer_key
+consumer_secret = keys.consumer_secret
+access_token = keys.access_token
+access_token_secret = keys.access_token_secret
+
+# Twitter authentication
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
 get_rt_start_pattern = re.compile(u"(^RT @[^:]+: )")
 
 def is_rt(string):
@@ -65,14 +76,3 @@ def start_stream(keywords):
     print('Starting stream')
     myStream = tweepy.Stream(auth=api.auth, listener=MyStreamListener())
     myStream.filter(track=keywords)
-
-# access keys for Twitter
-consumer_key = keys.consumer_key
-consumer_secret = keys.consumer_secret
-access_token = keys.access_token
-access_token_secret = keys.access_token_secret
-
-# Twitter authentication
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
