@@ -1,2 +1,3 @@
 # ignore api keys
 keys.py
+__pycache__/
