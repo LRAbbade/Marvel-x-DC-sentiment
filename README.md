@@ -22,4 +22,3 @@ Requisitos:
 
 - Python 3
 - Tweepy
-- PPrint
