@@ -17,3 +17,9 @@ Execute com
 ```
 python main.py
 ```
+
+Requisitos:
+
+- Python 3
+- Tweepy
+- PPrint
