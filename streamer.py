@@ -1,78 +1,72 @@
+import threading
 import tweepy
 from datetime import datetime
 import re
 import keys
 from pprint import pprint
+from textblob import TextBlob
 
-# access keys for Twitter
-consumer_key = keys.consumer_key
-consumer_secret = keys.consumer_secret
-access_token = keys.access_token
-access_token_secret = keys.access_token_secret
-
-# Twitter authentication
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
-
+# Determine whether a tweet is a retweet
 get_rt_start_pattern = re.compile(u"(^RT @[^:]+: )")
 
 def is_rt(string):
     return len(get_rt_start_pattern.findall(string)) > 0
 
-class MyStreamListener(tweepy.StreamListener):
-
-    def on_status(self, status):
-        tweet = filter_tweet(status)    # will return None if is RT\
-
-        if (tweet is not None) and (tweet['lang'] == 'en'):
-            pass
-            # process tweet
-
-    def on_error(self, status_code):
-        if status_code == 420:
-            print('Connection error')
-            return False            # returning False disconnects the stream
-
-def get_user_basics(user):
+def get_status_info(status, keyword):
     document = {
-        'id' : user.id_str,
-        'user_name' : '@' + user.screen_name,
-        'name' : user.name,
-        'location' : user.location,
-        'followers_count' : user.followers_count,
-        'following' : user.friends_count,
-        'verified' : user.verified,
-        'created_at' : user.created_at
-    }
-
-    return document
-
-def get_status_info(status):
-    document = {
-        'id' : status.id_str,
-        'user' : get_user_basics(status.user),
-        'is_reply' : status.in_reply_to_status_id is not None,
-        'in_reply_to_status_id' : status.in_reply_to_status_id_str,
-        'retweets' : status.retweet_count,
-        'favorites' : status.favorite_count,
-        'replies' : status.reply_count,
-        'date' : status.created_at,
         'text' : status.text if not status.truncated else status.extended_tweet['full_text'],
-        'lang' : status.lang
+        'keyword' : keyword
     }
 
-    return document
+    blob = TextBlob(document['text'])
+    document['sentiment'] = blob.sentiment.polarity
+
+    return document if keyword in document['text'] else None
 
 # returns the document for saving
-def filter_tweet(status):
-    if is_rt(status.text):
+def filter_tweet(status, keyword):
+    if is_rt(status.text) or status.lang != 'en':
         return None
 
-    return get_status_info(status)
+    return get_status_info(status, keyword)
 
-# keywords must be a string array
-def start_stream(keywords):
-    print('Starting stream')
-    myStream = tweepy.Stream(auth=api.auth, listener=MyStreamListener())
-    myStream.filter(track=keywords)
+class MyStreamListener(tweepy.StreamListener):
+
+    def __init__(self, keyword):
+        self.keyword = keyword
+        super(MyStreamListener, self).__init__()
+
+    def on_status(self, status):
+        tweet = filter_tweet(status, self.keyword)    # will return None if is RT, not in english, or keyword not present in text
+
+        if tweet is not None:
+            pprint(tweet)
+
+    def on_error(self, status_code):
+        if status_code == 420:          # disconnected by twitter, usually for exceeding rate limits
+            print('Connection error in stream', self.keyword)
+            return False            # returning False disconnects the stream
+
+class Streamer(threading.Thread):
+
+    def __init__(self, keyword):
+        # Twitter authentication
+        self.auth = tweepy.OAuthHandler(keys.consumer_key, keys.consumer_secret)
+        self.auth.set_access_token(keys.access_token, keys.access_token_secret)
+        self.api = tweepy.API(self.auth)
+        self.keyword = keyword
+        super(Streamer, self).__init__()
+
+    def run(self):
+        try:
+            self.start_stream()
+        except Exception as e:
+            if "IncompleteRead" in repr(e):             # common error where the stream is faster than the machine can handle
+                print('Incomplete read in', self.keyword)
+            else:
+                print('Stream', self.keyword, 'stopped. Error:', e)
+
+    # keyword is the desired streaming term
+    def start_stream(self):
+        self.myStream = tweepy.Stream(auth=self.api.auth, listener=MyStreamListener(self.keyword))
+        self.myStream.filter(track=self.keyword)

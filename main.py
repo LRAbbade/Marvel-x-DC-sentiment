@@ -1,9 +1,13 @@
-import streamer
+from streamer import Streamer
 
-keywords = ['java',
-            'python',
+keywords = ['python',
             'c++',
-            'c#',
+            'java',
             'javascript']
 
-streamer.start_stream(keywords)
+threads = {}
+
+for word in keywords:
+    threads[word] = Streamer(word)
+    print('Starting stream on term', word)
+    threads[word].start()
