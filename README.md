@@ -2,7 +2,7 @@
 Trabalho de threads do renzão
 
 Resumo:
-Cria uma thread para streamar cada um dos termos no array "keywords" em main.py, filtra as informações dos tweets, analisa o sentimento deles usando o TextBlob, os que não forem neutros são exibidos. 
+Cria uma thread para streamar cada um dos termos no array "keywords" em main.py, filtra as informações dos tweets, analisa o sentimento deles usando o TextBlob e salva no mongoDB. Uma outra thread lê o mongodb em tempo real e plota uma média móvel usando o matplotlib. 
 
 Para executar, faça git clone, e então crie um arquivo "keys.py", onde deve se inserir as access keys do twitter de sua conta no seguinte formato:
 
@@ -26,3 +26,5 @@ Requisitos:
 - Python 3
 - Tweepy
 - TextBlob
+- Pymongo
+- Matplotlib
