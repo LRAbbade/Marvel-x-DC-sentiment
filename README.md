@@ -1,10 +1,9 @@
-# SO_Threads
-Trabalho de threads do renzão
+# Marvel vs DC
+This project was a test to live streaming, classifying and presenting the live twitter sentiment of some of the most famous heroes from DC and Marvel.
 
-Resumo:
-Cria uma thread para streamar tweets sobre a DC e uma sobre a Marvel, filtra as informações dos tweets, analisa o sentimento deles usando o TextBlob e salva no mongoDB. Uma outra thread lê o mongodb em tempo real e plota uma média móvel usando o matplotlib. 
+The project works by simultaneosly streaming tweets relative to the heroes chosen, saving the filtered and classified tweets to a local running mongoDB instance, and using MongoDB's aggregation framework to separate the data in time frames and display the results with matplotlib.
 
-Para executar, faça git clone, e então crie um arquivo "keys.py", onde deve se inserir as access keys do twitter de sua conta no seguinte formato:
+To execute, just `git clone` this repository, create a file named `keys.py`, which should contain your twitter API keys in the following format:
 
 ```
 consumer_key = ''
@@ -13,15 +12,15 @@ access_token = ''
 access_token_secret = ''
 ```
 
-Insira as keys entre ' '
+Insert the keys between ' '
 
-Execute com
+Run it with:
 
 ```
 python main.py
 ```
 
-Requisitos:
+Dependencies:
 
 - Python 3
 - Tweepy
